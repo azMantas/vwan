@@ -6,8 +6,8 @@ resource vwan 'Microsoft.Network/virtualWans@2022-05-01' = {
   location: resourceGroup().location
   properties:{
     type: 'Standard'
-    disableVpnEncryption: true
-    allowBranchToBranchTraffic: false
+    disableVpnEncryption: false
+    allowBranchToBranchTraffic: true
     allowVnetToVnetTraffic: true
   }
 }
