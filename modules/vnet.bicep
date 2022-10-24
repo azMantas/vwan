@@ -1,8 +1,9 @@
 
+param virtualHubName string = 'hubv2'
 param vnetName string 
 param vnetAddressPrefix string
-param virtualHubName string = 'hubv2'
-
+param subnetName string
+param subnetAddressPrefix string
 
 
 
@@ -15,6 +16,18 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
         vnetAddressPrefix
       ]
     }
+    subnets: [
+      {
+        name: subnetName
+        properties:{
+          addressPrefix: subnetAddressPrefix
+          privateEndpointNetworkPolicies: 'Enabled'
+        }
+      }
+    ]
+  }
+  resource mainSubnet 'subnets' existing = {
+    name: subnetName
   }
 }
 
@@ -29,3 +42,5 @@ module peering 'connecttoHub.bicep' = {
     virtualHubName: virtualHubName
   }
 }
+
+output subnetId string = vnet::mainSubnet.id

@@ -34,3 +34,13 @@ module routeTables 'modules/hubRouteTables.bicep' = {
     hubName: hubs.outputs.hubName
   }
 }
+
+module vpnConfig 'modules/p2s.bicep' = {
+  scope: wanRG
+  name: 'vpnConfig-deployment'
+  params: {
+    vpnRootCertificateName: 'vpnCertTst'
+    publicCertData: 'oops...'
+    virtualHubId: hubs.outputs.hubResourceId
+  }
+}
