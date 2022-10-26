@@ -43,7 +43,7 @@ resource  firewallPolicy 'Microsoft.Network/firewallPolicies@2022-05-01' = {
   location: resourceGroup().location
   properties:{
     sku:{
-      tier:'Basic'
+      tier:'Standard'
     }
   }
 }

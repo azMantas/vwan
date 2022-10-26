@@ -9,12 +9,15 @@ resource hubRouteTable 'Microsoft.Network/virtualHubs/hubRouteTables@2022-05-01'
   name: 'defaultRouteTable'
   parent: vHub
   properties: {
-    routes:[
+    routes: [
       {
-        name: 'allTraffic'
+        name: 'all_traffic'
         destinationType: 'CIDR'
         destinations: [
           '0.0.0.0/0'
+          '10.0.0.0/8'
+          '172.16.0.0/12'
+          '192.168.0.0/16'
         ]
         nextHop: AzureFirewallResourceId
         nextHopType: 'ResourceId'
@@ -23,7 +26,7 @@ resource hubRouteTable 'Microsoft.Network/virtualHubs/hubRouteTables@2022-05-01'
     labels: [
       'default'
     ]
-  } 
+  }
 }
 
 output resourceId string = hubRouteTable.id
