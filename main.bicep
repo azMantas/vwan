@@ -5,6 +5,7 @@ resource wanRG 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: 'westeurope'
 }
 
+
 module vwan 'modules/vwan.bicep' = {
   scope: wanRG
   name: 'wan-deployment'
@@ -35,12 +36,18 @@ module routeTables 'modules/hubRouteTables.bicep' = {
   }
 }
 
+resource existingKv 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
+  name: 'wanSecrets'
+  scope: resourceGroup('secrets')
+}
+
+
 module vpnConfig 'modules/p2s.bicep' = {
   scope: wanRG
   name: 'vpnConfig-deployment'
   params: {
     vpnRootCertificateName: 'vpnCertTst'
-    publicCertData: 'oops...'
+    publicCertData: existingKv.getSecret('p2s')
     virtualHubId: hubs.outputs.hubResourceId
   }
 }

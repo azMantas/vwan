@@ -1,4 +1,5 @@
 param vpnRootCertificateName string
+@secure()
 param publicCertData string
 param vpnServerConfigName string = 'init'
 param virtualHubId string
