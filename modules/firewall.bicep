@@ -17,6 +17,9 @@ resource firewall 'Microsoft.Network/azureFirewalls@2022-05-01' = {
         count: 1
       }
     }
+    firewallPolicy:{
+      id: firewallPolicy.id
+    }
   }
 }
 
