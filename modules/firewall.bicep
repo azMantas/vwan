@@ -1,5 +1,6 @@
 param hubId string
-param laResourceId string = '/subscriptions/7e88dc1f-a45d-47dc-b986-785db0fea339/resourcegroups/logs/providers/microsoft.operationalinsights/workspaces/la-hub'
+param laResourceId string
+param dnsServerIpAdr string
 
 resource firewall 'Microsoft.Network/azureFirewalls@2022-05-01' = {
   name: 'azFirewall'
@@ -17,6 +18,62 @@ resource firewall 'Microsoft.Network/azureFirewalls@2022-05-01' = {
         count: 1
       }
     }
+    firewallPolicy:{
+      id: firewallPolicy.id
+    }
+  }
+}
+
+resource  firewallPolicy 'Microsoft.Network/firewallPolicies@2022-05-01' = {
+  name: 'main'
+  location: resourceGroup().location
+  properties:{
+    sku:{
+      tier:'Standard'
+    }
+    dnsSettings: {
+      enableProxy: true
+      servers:[
+        dnsServerIpAdr
+      ]
+    }
+  }
+}
+
+resource firewallRules 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+  name: 'DefaultApplicationRuleCollectionGroup'
+  parent: firewallPolicy
+  properties: {
+    priority: 100
+    ruleCollections: [
+      {
+        name: 'whitelistedResources'
+        priority: 100
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        rules: [
+          {
+            ruleType: 'ApplicationRule'
+            name: 'p2s-lz1'
+            protocols: [
+              {
+                port: 443
+                protocolType:'Https'
+              }
+            ]
+            sourceAddresses:[
+              '10.10.10.0/24'
+            ]
+            targetFqdns:[
+              '*.vault.azure.net'
+              '*.blob.core.windows.net'
+            ]
+          }
+        ]
+      }
+      ]
   }
 }
 
@@ -37,16 +94,5 @@ resource firewalldiag 'Microsoft.Network/azureFirewalls/providers/diagnosticSett
     ]
   }
 }
-
-resource  firewallPolicy 'Microsoft.Network/firewallPolicies@2022-05-01' = {
-  name: 'main'
-  location: resourceGroup().location
-  properties:{
-    sku:{
-      tier:'Basic'
-    }
-  }
-}
-
 
 output firewallResourceId string = firewall.id
