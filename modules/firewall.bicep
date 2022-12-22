@@ -1,5 +1,6 @@
 param hubId string
 param laResourceId string
+param dnsServerIpAdr string
 
 resource firewall 'Microsoft.Network/azureFirewalls@2022-05-01' = {
   name: 'azFirewall'
@@ -29,6 +30,12 @@ resource  firewallPolicy 'Microsoft.Network/firewallPolicies@2022-05-01' = {
   properties:{
     sku:{
       tier:'Standard'
+    }
+    dnsSettings: {
+      enableProxy: true
+      servers:[
+        dnsServerIpAdr
+      ]
     }
   }
 }

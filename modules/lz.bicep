@@ -2,35 +2,37 @@ param lzName string
 param vnetAddressPrefix string
 param subnetAddressPrefix string
 param virtualHubName string
-param VWanSubscriptionId string 
+param VWanSubscriptionId string
 @allowed([
-  'Enabled'
-  'Disabled'
-  'RouteTableEnabled'
-  'NetworkSecurityGroupEnabled'
-]
+    'Enabled'
+    'Disabled'
+    'RouteTableEnabled'
+    'NetworkSecurityGroupEnabled'
+  ]
 )
 param privateEndpointNetworkPolicies string
+param blobPrivateDnsZoneId string
+param vaultPrivateDnsZoneId string
 
-var unique = take(uniqueString(lzName),5)
+var unique = take(uniqueString(lzName), 5)
 var vnetName = 'vnet-${lzName}'
 var subnetName = 'snet-pe-${lzName}'
-var kvName = 'kv-${lzName}-${unique}'
+var kvName = 'kvv2-${lzName}-${unique}'
 var stName = 'st${lzName}${unique}'
 
 resource vnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
   name: vnetName
   location: resourceGroup().location
-  properties:{
+  properties: {
     addressSpace: {
-      addressPrefixes:[
+      addressPrefixes: [
         vnetAddressPrefix
       ]
     }
     subnets: [
       {
         name: 'snet-pe-${lzName}'
-        properties:{
+        properties: {
           addressPrefix: subnetAddressPrefix
           privateEndpointNetworkPolicies: privateEndpointNetworkPolicies
         }
@@ -44,7 +46,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
 
 module peering 'hubVirtualNetworkConnections.bicep' = {
   name: 'peer-${vnetName}-deployment'
-  scope: resourceGroup(VWanSubscriptionId,'vwan')
+  scope: resourceGroup(VWanSubscriptionId, 'vwan')
   params: {
     associatedRouteTable: '/subscriptions/${VWanSubscriptionId}/resourceGroups/vwan/providers/Microsoft.Network/virtualHubs/${virtualHubName}/hubRouteTables/defaultRouteTable'
     propagatedRouteTables: '/subscriptions/${VWanSubscriptionId}/resourceGroups/vwan/providers/Microsoft.Network/virtualHubs/${virtualHubName}/hubRouteTables/noneRouteTable'
@@ -63,11 +65,12 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     enabledForDiskEncryption: true
     tenantId: tenant().tenantId
     enableRbacAuthorization: true
+    enableSoftDelete: false
     sku: {
       name: 'standard'
       family: 'A'
     }
-    networkAcls:{
+    networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
@@ -97,6 +100,22 @@ resource kvPrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-08-01' = {
   }
 }
 
+resource keyvaultPrivateDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+  name: 'vault'
+  parent: kvPrivateEndpoint
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'vault'
+        properties: {
+          privateDnsZoneId: vaultPrivateDnsZoneId
+        }
+      }
+    ]
+  }
+}
+
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: stName
   location: resourceGroup().location
@@ -104,7 +123,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
     name: 'Standard_LRS'
   }
   kind: 'StorageV2'
-  properties:{
+  properties: {
     allowBlobPublicAccess: false
     accessTier: 'Hot'
     allowSharedKeyAccess: false
@@ -113,7 +132,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
     defaultToOAuthAuthentication: true
     publicNetworkAccess: 'Disabled'
     minimumTlsVersion: 'TLS1_2'
-    networkAcls:{
+    networkAcls: {
       defaultAction: 'Deny'
       bypass: 'AzureServices'
     }
@@ -143,8 +162,17 @@ resource stPrivateEndpoint 'Microsoft.Network/privateEndpoints@2021-08-01' = {
   }
 }
 
-
-output kvIp string = kvPrivateEndpoint.properties.customDnsConfigs[0].ipAddresses[0]
-output kvFQDN string = kvPrivateEndpoint.properties.customDnsConfigs[0].fqdn
-output storageIp string = stPrivateEndpoint.properties.customDnsConfigs[0].ipAddresses[0]
-output stageFQDN string = stPrivateEndpoint.properties.customDnsConfigs[0].fqdn
+resource storagePrivateDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01' = {
+  name: 'blob'
+  parent: stPrivateEndpoint
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'blob'
+        properties: {
+          privateDnsZoneId: blobPrivateDnsZoneId
+        }
+      }
+    ]
+  }
+}

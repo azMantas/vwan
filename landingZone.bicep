@@ -40,13 +40,8 @@ module resources 'modules/lz.bicep' = [for (item, lz) in landingZone: {
     subnetAddressPrefix: item.subnetAddressPrefix 
     vnetAddressPrefix: item.vnetAddressPrefix
     privateEndpointNetworkPolicies: item.privateEndpointNetworkPolicies
+    blobPrivateDnsZoneId: '/subscriptions/6247f2f5-c221-464d-afd3-3ad763a9fc5e/resourceGroups/dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net'
+    vaultPrivateDnsZoneId: '/subscriptions/6247f2f5-c221-464d-afd3-3ad763a9fc5e/resourceGroups/dns/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net'
   }  
 }]
 
-
-output outputstst array = [ for (item, lz) in landingZone: {
-  kvFQDN: resources[lz].outputs.kvFQDN
-  kvIp: resources[lz].outputs.kvIp
-  storageFQDN: resources[lz].outputs.stageFQDN
-  storageIp: resources[lz].outputs.storageIp
-}]
