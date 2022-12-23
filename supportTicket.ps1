@@ -5,23 +5,32 @@
 $supportServices = Get-AzSupportService
 
 
-$serviceNames = [PSCustomObject]@{}
-$supportProblems = [PSCustomObject]@{}
-
+$serviceNames = New-Object PSCustomObject
+$serviceNamesList = @()
+$ServiceNames | Add-Member -MemberType NoteProperty -Name $service.DisplayName $serviceNamesList
 foreach ($service in $supportServices) {
-    Write-Output "service Name: $($service.displayName)"
-    foreach ($problems in $service) {
-        $problems = Get-AzSupportProblemClassification -ServiceId $service.Name
-        foreach ($issue in $problems) {
-            Write-Output "issue displayName: $($issue.DisplayName)"
-        }  
-    } Write-Output "------------"
+    $ServiceList = New-Object PSCustomObject
+    $serviceListArray = @()
+    $ServiceList | Add-Member -MemberType NoteProperty -Name $service.DisplayName $serviceListArray
+    # foreach ($problems in $service) {
+    #     $123 = New-Object PSCustomObject
+    #     $enListe = @()
+    #     $123 | Add-Member -MemberType NoteProperty -Name $issue.DisplayName -Value $enListe
+    #     $problems = Get-AzSupportProblemClassification -ServiceId $service.Name
+    #     foreach ($issue in $problems) {
+    #         $abc = New-Object PSCustomObject
+    #         $abc | Add-Member -MemberType NoteProperty -Name $issue.DisplayName -Value $issue.id
+    #         $enListe += $abc
+    #     } 
+    #     $emptyList += $123
+    # } 
+    $serviceNamesList += $ServiceList
 }
-$supportProblems | Add-Member -MemberType NoteProperty -Name $issue.DisplayName -Value $issue.id
-$serviceNames | Add-Member -MemberType NoteProperty -Name $service.DisplayName -Value $supportProblems 
+$serviceNames
 
 
-$a = $serviceNames | ConvertTo-Json -Depth 5| clip
+
+$a = $supportProblems | ConvertTo-Json -Depth 5| clip
 
 
 
